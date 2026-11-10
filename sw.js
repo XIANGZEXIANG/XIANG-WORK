@@ -1,9 +1,12 @@
 /* 只缓存公开外壳，绝不缓存解密后的内容。由 build.js 自动生成，请勿手改。 */
-var CACHE = 'ibc-gate-v1';
-var CORE = ["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./apple-touch-icon.png"];
+var CACHE = 'ibc-gate-v2';
+var CORE = ["./index.html","./manifest.json","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./apple-touch-icon.png"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) {
-    return Promise.all(CORE.map(function (u) { return c.add(u).catch(function () {}); }));
+    return Promise.all(CORE.map(function (u) { return c.add(u).catch(function () {}); }))
+      .then(function () { return c.match("./index.html"); })
+      /* 同一份密文补一个目录键，两种入口断网都能回退，且不重复下载 */
+      .then(function (r) { return r ? c.put("./", r.clone()) : null; });
   }).then(function () { return self.skipWaiting(); }));
 });
 self.addEventListener("activate", function (e) {
